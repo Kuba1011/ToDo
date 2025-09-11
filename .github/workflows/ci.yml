@@ -35,13 +35,11 @@ jobs:
       - name: pip-audit (JSON, fail if >= medium)
         run: |
           mkdir -p reports
-          # zamroź faktycznie zainstalowane pakiety do pliku lock
-          python -m pip freeze > reports/requirements.lock
-          # audytuj zamrożone zależności
-          pip-audit -r reports/requirements.lock \
+          pip-audit \
             --format json \
             --output reports/pip-audit.json \
             --strict --fail-on medium
+
 
 
   
