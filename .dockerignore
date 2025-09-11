@@ -1,0 +1,24 @@
+# Python: venv i cache
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Test/coverage artefakty
+.pytest_cache/
+.coverage*
+htmlcov/
+reports/
+
+# VCS / edytor
+.git/
+.gitignore
+.vscode/
+*.swp
+
+# Logi
+*.log
+
+# Sekrety / env (nie pieczemy do obrazu)
+.env
+.env.*

@@ -1,0 +1,83 @@
+{
+  "version": "2.0.0",
+  "windows": {
+    "options": {
+      "shell": {
+        "executable": "powershell.exe",
+        "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+      }
+    }
+  },
+  "options": {
+    "env": {
+      "PATH": "${workspaceFolder}\\.venv\\Scripts;${env:PATH}"
+    }
+  },
+  "tasks": [
+    {
+      "label": "Reports: Prepare dir",
+      "type": "shell",
+      "command": "if (!(Test-Path reports)) { New-Item -ItemType Directory reports | Out-Null }",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Report: Coverage JSON",
+      "type": "shell",
+      "dependsOn": ["Reports: Prepare dir"],
+      "command": "python -m pytest --cov=app --cov-branch --cov-report=term; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m coverage json -o reports/coverage.json",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Report: pip-audit JSON",
+      "type": "shell",
+      "dependsOn": ["Reports: Prepare dir"],
+      "command": "python -m pip_audit -r requirements.txt --format json -o reports/pip-audit.json",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Report: Trivy FS JSON",
+      "type": "shell",
+      "dependsOn": ["Reports: Prepare dir"],
+      "command": "trivy fs --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 --format json --output reports/trivy-fs.json .",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Image: Build (podman)",
+      "type": "shell",
+      "command": "podman build -t flask-todo .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Report: Trivy IMAGE JSON",
+      "type": "shell",
+      "dependsOn": ["Reports: Prepare dir", "Image: Build (podman)"],
+      "command": "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 --format json -o reports/trivy-image.json flask-todo",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Reports: ALL (FS)",
+      "dependsOn": [
+        "Report: Coverage JSON",
+        "Report: pip-audit JSON",
+        "Report: Trivy FS JSON"
+      ],
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Reports: ALL (IMAGE)",
+      "dependsOn": [
+        "Report: Coverage JSON",
+        "Report: pip-audit JSON",
+        "Image: Build (podman)",
+        "Report: Trivy IMAGE JSON"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

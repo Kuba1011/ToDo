@@ -1,0 +1,28 @@
+# Python / venv
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+
+# Pytest / Coverage
+.pytest_cache/
+htmlcov/
+.coverage*
+reports/
+
+# VS Code
+.vscode/*
+!.vscode/tasks.json
+
+# Env/secrets
+.env
+*.env
+
+# System / edytory
+.DS_Store
+Thumbs.db
+
+# Podman/Docker artefakty (opcjonalnie)
+*.tar

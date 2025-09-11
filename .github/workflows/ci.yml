@@ -1,0 +1,42 @@
+name: CI
+on: [push, pull_request]
+env:
+  PYTHON_VERSION: "3.13"
+  MIN_COVERAGE: "80"
+  TRIVY_SEVERITY: "HIGH,CRITICAL"
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pip-audit
+      - name: Make reports dir
+        run: mkdir -p reports
+      - name: Tests + coverage (>=${{ env.MIN_COVERAGE }}%)
+        run: |
+          pytest --cov=app --cov-branch --cov-report=term --cov-fail-under=${{ env.MIN_COVERAGE }}
+          coverage json -o reports/coverage.json
+      - name: pip-audit (JSON)
+        run: pip-audit -r requirements.txt --format json -o reports/pip-audit.json || true
+      - name: Trivy FS (JSON)
+        uses: aquasecurity/trivy-action@v0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,license
+          ignore-unfixed: true
+          severity: ${{ env.TRIVY_SEVERITY }}
+          format: json
+          output: reports/trivy-fs.json
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: reports/*.json
