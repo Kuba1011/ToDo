@@ -32,13 +32,14 @@ jobs:
           coverage json -o reports/coverage.json
 #      - name: pip-audit (JSON)
  #       run: pip-audit -r requirements.txt --format json --output
-      - name: pip-audit (JSON, fail if >= medium)
+      - name: pip-audit (JSON, fail on any finding)
         run: |
-          mkdir -p reports
-          pip-audit \
-            --format json \
-            --output reports/pip-audit.json \
-            --strict --fail-on medium
+         mkdir -p reports
+         pip-audit -r requirements.txt \
+          --format json \
+          --output reports/pip-audit.json \
+          --strict
+
 
 
 
