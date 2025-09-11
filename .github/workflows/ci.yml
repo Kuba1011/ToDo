@@ -1,9 +1,14 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
 env:
   PYTHON_VERSION: "3.13"
   MIN_COVERAGE: "80"
   TRIVY_SEVERITY: "HIGH,CRITICAL"
+
 jobs:
   quality:
     runs-on: ubuntu-latest
