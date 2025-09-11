@@ -31,7 +31,8 @@ jobs:
           pytest --cov=app --cov-branch --cov-report=term --cov-fail-under=${{ env.MIN_COVERAGE }}
           coverage json -o reports/coverage.json
       - name: pip-audit (JSON)
-        run: pip-audit -r requirements.txt --format json -o reports/pip-audit.json || true
+        run: pip-audit -r requirements.txt  --format json  --output reports/pip-audit.json  --strict --fail-on medium
+        #run: pip-audit -r requirements.txt --format json -o reports/pip-audit.json || true
       - name: Trivy FS (JSON)
         uses: aquasecurity/trivy-action@0.20.0
         with:
