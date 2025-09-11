@@ -34,11 +34,12 @@ jobs:
  #       run: pip-audit -r requirements.txt --format json --output
       - name: pip-audit (JSON, fail if >= medium)
         run: |
-         mkdir -p reports
-         pip-audit -r requirements.txt \
-          --format json \
-          --output reports/pip-audit.json \
-          --strict --fail-on medium
+          mkdir -p reports
+          pip-audit -r requirements.txt \
+            --format json \
+            --output reports/pip-audit.json \
+            --strict --fail-on medium
+
   
 #run: pip-audit -r requirements.txt  --format json  --output reports/pip-audit.json  --strict --fail-on medium
         #run: pip-audit -r requirements.txt --format json -o reports/pip-audit.json || true
