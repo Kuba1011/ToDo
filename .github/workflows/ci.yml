@@ -32,7 +32,7 @@ jobs:
       - name: pip-audit (JSON)
         run: pip-audit -r requirements.txt --format json -o reports/pip-audit.json || true
       - name: Trivy FS (JSON)
-        uses: aquasecurity/trivy-action@v0
+        uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: fs
           scanners: vuln,secret,license
