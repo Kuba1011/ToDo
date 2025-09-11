@@ -8,6 +8,7 @@ env:
   PYTHON_VERSION: "3.13"
   MIN_COVERAGE: "80"
   TRIVY_SEVERITY: "HIGH,CRITICAL"
+  PYTHONPATH: ${{ github.workspace }}
 
 jobs:
   quality:
