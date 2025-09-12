@@ -7,6 +7,10 @@ Używa Playwright APIRequestContext (bez otwierania przeglądarki).
 import json
 import os
 import pytest
+
+# 👇 Jeśli Playwright nie jest zainstalowany, pomiń cały moduł
+pytest.importorskip("playwright", reason="Playwright nie jest zainstalowany (pomijam E2E)")
+
 from playwright.sync_api import sync_playwright, APIRequestContext
 
 # Pozwala nadpisać adres w CI: BASE_URL=http://127.0.0.1:5000
@@ -28,6 +32,7 @@ def api(pw) -> APIRequestContext:
     ctx.dispose()
 
 
+@pytest.mark.e2e
 def test_root_and_tasks_flow(api: APIRequestContext):
     # 1) GET /
     r = api.get("/")
