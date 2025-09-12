@@ -68,3 +68,44 @@ jobs:
         with:
           name: reports
           path: reports/*.json
+
+  e2e:
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      FLASK_APP: app
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install deps (app + tests + Playwright)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-playwright playwright
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run Flask in background
+        run: |
+          nohup python -m flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+          # proste czekanie aż port wstanie
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:5000/ >/dev/null; then
+              echo "Flask is up"; break
+            fi
+            sleep 1
+          done
+
+      - name: Run E2E tests (Playwright)
+        run: pytest -q tests_e2e
+
+      - name: Print Flask log on failure
+        if: failure()
+        run: cat flask.log
