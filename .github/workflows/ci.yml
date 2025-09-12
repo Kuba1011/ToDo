@@ -15,37 +15,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pip-audit
+
       - name: Make reports dir
         run: mkdir -p reports
+
       - name: Tests + coverage (>=${{ env.MIN_COVERAGE }}%)
         run: |
           pytest --cov=app --cov-branch --cov-report=term --cov-fail-under=${{ env.MIN_COVERAGE }}
           coverage json -o reports/coverage.json
-#      - name: pip-audit (JSON)
- #       run: pip-audit -r requirements.txt --format json --output
+
+      # 🚨 Zawieś pipeline, jeśli pip-audit znajdzie JAKIEKOLWIEK CVE
       - name: pip-audit (JSON, fail on any finding)
         run: |
-         mkdir -p reports
-         pip-audit -r requirements.txt \
-          --format json \
-          --output reports/pip-audit.json \
-          --strict
+          mkdir -p reports
+          pip-audit -r requirements.txt \
+            --format json \
+            --output reports/pip-audit.json \
+            --strict
 
+      # Jeśli wolisz, żeby CI NIE przerywał się na podatnościach,
+      # zamień powyższy blok na to (bez --strict, z "|| true"):
+      # - name: pip-audit (JSON, do not fail CI)
+      #   run: |
+      #     mkdir -p reports
+      #     pip-audit -r requirements.txt \
+      #       --format json \
+      #       --output reports/pip-audit.json || true
 
-
-
-  
-#run: pip-audit -r requirements.txt  --format json  --output reports/pip-audit.json  --strict --fail-on medium
-        #run: pip-audit -r requirements.txt --format json -o reports/pip-audit.json || true
       - name: Trivy FS (JSON)
         uses: aquasecurity/trivy-action@0.20.0
         with:
@@ -55,6 +62,7 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           format: json
           output: reports/trivy-fs.json
+
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
