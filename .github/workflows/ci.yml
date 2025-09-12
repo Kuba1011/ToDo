@@ -30,12 +30,11 @@ jobs:
       - name: Make reports dir
         run: mkdir -p reports
 
-      - name: Tests + coverage (>=${{ env.MIN_COVERAGE }}%)
+      - name: Tests + coverage (>=${{ env.MIN_COVERAGE }}%)  # bez E2E
         run: |
-          pytest --cov=app --cov-branch --cov-report=term --cov-fail-under=${{ env.MIN_COVERAGE }}
+          pytest -m "not e2e" --cov=app --cov-branch --cov-report=term --cov-fail-under=${{ env.MIN_COVERAGE }}
           coverage json -o reports/coverage.json
 
-      # 🚨 Zawieś pipeline, jeśli pip-audit znajdzie JAKIEKOLWIEK CVE
       - name: pip-audit (JSON, fail on any finding)
         run: |
           mkdir -p reports
@@ -43,15 +42,6 @@ jobs:
             --format json \
             --output reports/pip-audit.json \
             --strict
-
-      # Jeśli wolisz, żeby CI NIE przerywał się na podatnościach,
-      # zamień powyższy blok na to (bez --strict, z "|| true"):
-      # - name: pip-audit (JSON, do not fail CI)
-      #   run: |
-      #     mkdir -p reports
-      #     pip-audit -r requirements.txt \
-      #       --format json \
-      #       --output reports/pip-audit.json || true
 
       - name: Trivy FS (JSON)
         uses: aquasecurity/trivy-action@0.20.0
@@ -75,6 +65,7 @@ jobs:
     env:
       FLASK_APP: app
       PYTHONPATH: ${{ github.workspace }}
+      BASE_URL: http://127.0.0.1:5000
     steps:
       - uses: actions/checkout@v4
 
@@ -95,7 +86,6 @@ jobs:
       - name: Run Flask in background
         run: |
           nohup python -m flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
-          # proste czekanie aż port wstanie
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:5000/ >/dev/null; then
               echo "Flask is up"; break
@@ -104,7 +94,7 @@ jobs:
           done
 
       - name: Run E2E tests (Playwright)
-        run: pytest -q tests_e2e
+        run: pytest -q -m e2e
 
       - name: Print Flask log on failure
         if: failure()
