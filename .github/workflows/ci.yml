@@ -53,12 +53,13 @@ jobs:
           format: json
           output: reports/trivy-fs.json
 
-      - name: SBOM (CycloneDX) – zależności Pythona z requirements.txt
+      - name: SBOM (CycloneDX)
         run: |
           pip install cyclonedx-bom
-          cyclonedx-py -r requirements.txt --format json -o reports/sbom-app.cdx.json
+          cyclonedx-py requirements -i requirements.txt --format json -o reports/sbom-app.cdx.json
 
-      - name: SBOM (CycloneDX) – kod źródłowy repo
+
+      - name: SBOM (CycloneDX) 
         uses: anchore/sbom-action@v0
         with:
           path: .
