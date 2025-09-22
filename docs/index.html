@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ToDo – frontend (GitHub Pages)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 700px; margin: 2rem auto; }
+    input, button { padding: .5rem .75rem; }
+    ul { padding-left: 1rem; }
+    li { margin: .25rem 0; display:flex; gap:.5rem; align-items:center; }
+    label { flex:1; }
+  </style>
+</head>
+<body>
+  <h1>ToDo (frontend statyczny)</h1>
+  <p>Ustaw adres API i korzystaj z CRUD.</p>
+
+  <label>API base URL:
+    <input id="apiUrl" size="40" value="http://127.0.0.1:5000">
+  </label>
+  <button id="saveUrl">Zapisz</button>
+
+  <h2>Dodaj zadanie</h2>
+  <input id="title" placeholder="np. Kup mleko" />
+  <button id="add">Dodaj</button>
+
+  <h2>Lista</h2>
+  <ul id="list"></ul>
+
+  <script>
+    const apiUrlInput = document.getElementById('apiUrl');
+    const saved = localStorage.getItem('API_BASE_URL');
+    if (saved) apiUrlInput.value = saved;
+    document.getElementById('saveUrl').onclick = () => {
+      localStorage.setItem('API_BASE_URL', apiUrlInput.value.trim());
+      load();
+    };
+    const api = () => (localStorage.getItem('API_BASE_URL') || apiUrlInput.value).replace(/\/+$/, '');
+
+    async function load() {
+      const ul = document.getElementById('list');
+      ul.innerHTML = 'Ładowanie...';
+      try {
+        const r = await fetch(api() + '/tasks');
+        const data = await r.json();
+        ul.innerHTML = '';
+        data.forEach(t => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <label>
+              <input type="checkbox" ${t.done ? 'checked' : ''} data-id="${t.id}" class="toggle">
+              <span>${t.title}</span>
+            </label>
+            <button data-id="${t.id}" class="del">Usuń</button>
+          `;
+          ul.appendChild(li);
+        });
+      } catch (e) {
+        ul.innerHTML = 'Błąd połączenia z API (sprawdź adres i CORS).';
+      }
+    }
+
+    document.getElementById('add').onclick = async () => {
+      const title = document.getElementById('title').value.trim();
+      if (!title) return;
+      await fetch(api() + '/tasks', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({title})
+      });
+      document.getElementById('title').value = '';
+      load();
+    };
+
+    document.getElementById('list').addEventListener('click', async (e) => {
+      if (e.target.classList.contains('del')) {
+        const id = e.target.getAttribute('data-id');
+        await fetch(api() + '/tasks/' + id, { method: 'DELETE' });
+        load();
+      }
+    });
+
+    document.getElementById('list').addEventListener('change', async (e) => {
+      if (e.target.classList.contains('toggle')) {
+        const id = e.target.getAttribute('data-id');
+        const done = e.target.checked;
+        await fetch(api() + '/tasks/' + id, {
+          method: 'PATCH',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({done})
+        });
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
